@@ -994,5 +994,5 @@ void loop() {
     // calculate delay until next minute starts
     cTime.update();
     unsigned long wait = 61 - cTime.second;
-    delay(wait);
+    delay(wait * 1000);
 }

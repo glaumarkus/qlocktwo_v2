@@ -1,7 +1,10 @@
+/*
+* Author:   Markus Glau
+* Date:     29.10.2021
+*/
 
 #include <FastLED.h>
 #include <DS3231.h>
-
 
 
 /*!

@@ -1,9 +1,9 @@
 /*
 * Author:   Markus Glau
 * Date:     29.10.2021
+* GPIO Mapping: LED 5V -> 5V, LED GND -> GND, LED DIN -> 13, RTC 3V -> 3V, RTC GND -> GND, RTC SDA -> Analog 4, RTC SCL -> Analog 5
 */
-
-#include <FastLED.h>
+#include <FastLED.h>    
 #include <DS3231.h>
 
 
@@ -24,6 +24,17 @@ static CRGB leds[NUM_LEDS];
  * \brief static rtc component
  */
 static DS3231  rtc(SDA, SCL);
+
+
+/*!
+ * \brief range for random colors
+ */
+constexpr uint8_t MAX_COLOR = 255;
+
+/*!
+ * \brief global brightness
+ */
+constexpr uint8_t BRIGHTNESS = 125;
 
 
 /*!
@@ -621,7 +632,7 @@ struct Snake : Animation
         {
             if (active < end)
             {
-                ActiveAnimators[active] = container.inData(active) == true ? ColorAnimator(active, anim_steps, m_color, true) : ColorAnimator(active, anim_steps, Color(random(0, 50), random(0, 50), random(0, 50)));
+                ActiveAnimators[active] = container.inData(active) == true ? ColorAnimator(active, anim_steps, m_color, true) : ColorAnimator(active, anim_steps, Color(random(0, MAX_COLOR), random(0, MAX_COLOR), random(0, MAX_COLOR)));
                 active++;
             }
 
@@ -677,7 +688,7 @@ struct PulseRandom : Animation
                 if (container.inData(array[idx]))
                     animators[active++] = ColorAnimator(array[idx], anim_steps, m_color, true);
                 else
-                    animators[active++] = ColorAnimator(array[idx], anim_steps, Color(random(0, 50), random(0, 50), random(0, 50)));
+                    animators[active++] = ColorAnimator(array[idx], anim_steps, Color(random(0, MAX_COLOR), random(0, MAX_COLOR), random(0, MAX_COLOR)));
             }
 
             if (active == anim_steps * 2)
@@ -748,13 +759,18 @@ struct RowAnimator
         for (uint8_t ix = 0; ix < 11; ix++)
         {
             if (filter)
+            {
                 if (container.inData(display[m_row][ix] - 1))
                     Animators[m_active++] = ColorAnimator(display[m_row][ix] - 1, 3, color, true);
-            else 
+            }
+
+            else {
                 if (container.inData(display[m_row][ix] - 1))
                     Animators[m_active++] = ColorAnimator(display[m_row][ix] - 1, 3, color, true);
                 else
-                    Animators[m_active++] = ColorAnimator(display[m_row][ix] - 1, 3, Color(random(0, 30), random(0, 30), random(0, 30)));
+                    Animators[m_active++] = ColorAnimator(display[m_row][ix] - 1, 3, Color(random(0, MAX_COLOR), random(0, MAX_COLOR), random(0, MAX_COLOR)));
+            }
+
         }
     }
 
@@ -771,7 +787,7 @@ struct RowAnimator
               }
       return flag;
               
-    }
+      }
 
     void update()
     {
@@ -788,6 +804,7 @@ struct RowAnimator
     uint8_t m_updater = 0;
     bool m_filter = false;
     uint8_t m_row = 0;
+
 };
 
 
@@ -799,8 +816,9 @@ struct RowAnimation : Animation
   RowAnimation(const Color& color) : Animation(color){}
     void animate(Container& container) override
     {
-
+        Serial.println("Clear LED");
         clearLEDs();
+
         const uint8_t num_animators = 4;
 
         // need to save memory
@@ -814,7 +832,6 @@ struct RowAnimation : Animation
         uint8_t active = 0;
         uint8_t curr_row = 0;
 
-        // Animate row
         
         for (uint8_t i = 0; i < n; i++)
         {
@@ -822,35 +839,31 @@ struct RowAnimation : Animation
             // add next actor
             if (i % offset == 0)
             {
-                // reset overwrite
-                if (start == num_animators)
-                    start = 0;
+              // reset overwrite
+              if (start == num_animators)
+                start = 0;
 
-                // is there more rows to add?
-                if (curr_row < 10)
-                {
-                    rowAnimators[start] = RowAnimator();
-                    rowAnimators[start].setup(curr_row++, container, m_color);
+              // is there more rows to add?
+              if (curr_row < 10)
+              {
+              rowAnimators[start] = RowAnimator();
+              rowAnimators[start].setup(curr_row++, container, m_color);
 
-                    start++;
-                    if (active < start)
-                        active = start;
-                }
-              
+              start++;
+              if (active < start)
+                active = start;
+              }
             }
 
-
             // Update Animators
-            for (uint8_t ix = 0; ix < active; ix++)
+            for (uint8_t ix = 0; ix < active; ix++){
                 rowAnimators[ix].update();
-
+              }
             FastLED.show();
             delay(100);
-        }   
+        }
     }
-
 };
-
 
 /*!
  * \brief struct to derive current time / set current time / update & check for special days. Add your special days in checkForSpecial() function.
@@ -883,8 +896,8 @@ struct CurrentTime
   bool checkForSpecial()
   {
     // add all special days here
-    const HELPER::pair day1(26, 10);
-    const HELPER::pair day2(27, 10);
+    const HELPER::pair day1(25, 12);
+    const HELPER::pair day2(20, 1);
 
     // current day
     const HELPER::pair today(day, month);
@@ -899,8 +912,30 @@ struct CurrentTime
 
   void checkForWT()
   {
-    // check early year
-    if (month <=3 && day <= 28 && hour <= 2)
+    
+    // new
+    bool cond = false;
+    if (month < 3)
+    {
+        cond = true;
+    }
+    else if (month == 3)
+    {
+        if (day < 28)
+            cond = true;
+        else if (day == 28)
+            if (hour < 2)
+                cond = true;
+    }
+    else if (month > 10)
+        cond = true;
+    else if (month == 10)
+    {
+        if (day == 31 && hour > 1)
+            cond = true;
+    }
+
+    if (cond)
     {
         int newHour = hour - 1;
         if (newHour < 0)
@@ -908,14 +943,6 @@ struct CurrentTime
         hour = newHour;
     }
 
-    // check late year
-    if (month >= 10 && day >= 28 && hour >= 2)
-    {
-        int newHour = hour - 1;
-        if (newHour < 0)
-            newHour = 11;
-        hour = newHour;
-    }
   }
 
 
@@ -944,9 +971,18 @@ bool animation_switch = true;
 */
 void setup()
 { 
+  Serial.begin(115200);
   FastLED.addLeds<WS2812B, DATA_PIN, RGB>(leds, NUM_LEDS);
-  FastLED.setBrightness(80);
+  FastLED.setBrightness(BRIGHTNESS);
   rtc.begin();
+  
+  /*
+  * optional: set time 
+  */
+  //rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to SUNDAY
+  //rtc.setTime(12, 0, 0);     // Set the time to 12:00:00 (24hr format)
+  //rtc.setDate(1, 1, 2014);   // Set the date to January 1st, 2014
+  
 }
 
 
@@ -955,10 +991,21 @@ void setup()
 */
 void loop() {
 
-
     // update current time
+    Serial.println("Update");
     CurrentTime cTime;
     cTime.update();
+
+    /*
+     * print time
+     */
+    Serial.print("Time: ");
+    Serial.print(cTime.hour);
+    Serial.print(":");
+    Serial.print(cTime.minute);
+    Serial.print(":");
+    Serial.println(cTime.second);
+    
 
     // convert min to query idx
     uint8_t min_idx = static_cast<int> ((float) cTime.minute / 5);
@@ -971,17 +1018,24 @@ void loop() {
     container.push_back(states::hState[hour_idx], states::hStateSizes[hour_idx]);
     container.push_back(states::mState[min_idx], states::mStateSizes[min_idx]);
 
+    Serial.println("Animation");
     if (cTime.checkForSpecial())
     {
         // do special
         Heart heart;
         heart.animate(container);
     }
+    
+    RowAnimation rows(Color(random(0,MAX_COLOR),random(0,MAX_COLOR),random(0,MAX_COLOR)));
+    rows.animate(container);
 
+
+    /*
     if (animation_switch)
     {
         // animation 1
-        RowAnimation rows(Color(random(0,50),random(0,50),random(0,50)));
+        Serial.println("Animation 1");
+        RowAnimation rows(Color(random(0,MAX_COLOR),random(0,MAX_COLOR),random(0,MAX_COLOR)));
         rows.animate(container);
         animation_switch = false;
     }
@@ -989,13 +1043,19 @@ void loop() {
     else 
     {
         // animation 2
-        PulseRandom pulse(Color(random(0,50),random(0,50),random(0,50)));
+        Serial.println("Animation 2");
+        PulseRandom pulse(Color(random(0,MAX_COLOR),random(0,MAX_COLOR),random(0,MAX_COLOR)));
         pulse.animate(container);
         animation_switch = true;
     }
+    */
 
+    Serial.println("Waiting:");
+    
     // calculate delay until next minute starts
     cTime.update();
-    unsigned long wait = 61 - cTime.second;
+    unsigned long wait = 301 - cTime.second;
+    Serial.println(wait * 1000);
     delay(wait * 1000);
+    
 }

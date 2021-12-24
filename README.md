@@ -27,3 +27,8 @@ I used the attached pdf file as template in Formulor to get a laser cut letter p
 
 
 ### Arduino Software
+
+http://www.rinkydinkelectronics.com/library.php?id=73
+
+FastLED
+

@@ -73,7 +73,7 @@ namespace states {
     static constexpr uint8_t mState_35[] = { 80, 81, 100, 101, 77, 84, 97, 104, 5, 16, 25, 36 };
     static constexpr uint8_t mState_40[] = { 42, 59, 62, 79, 82, 99, 102, 4, 17, 24 };
     static constexpr uint8_t mState_45[] = { 3, 18, 23, 38, 43, 58, 63, 78, 83, 98, 103 };
-    static constexpr uint8_t mState_50[] = { 2, 19, 22, 39, 4, 17, 24, 37 };
+    static constexpr uint8_t mState_50[] = { 2, 19, 22, 39, 4, 17, 24};
     static constexpr uint8_t mState_55[] = { 80, 81, 100, 101, 4, 17, 24 };
 
     /*
@@ -143,7 +143,7 @@ namespace states {
     static constexpr uint8_t mState_35_size = 12;
     static constexpr uint8_t mState_40_size = 10;
     static constexpr uint8_t mState_45_size = 11;
-    static constexpr uint8_t mState_50_size = 8;
+    static constexpr uint8_t mState_50_size = 7;
     static constexpr uint8_t mState_55_size = 7;
 
     /*

@@ -896,8 +896,8 @@ struct CurrentTime
   bool checkForSpecial()
   {
     // add all special days here
-    const HELPER::pair day1(25, 12);
-    const HELPER::pair day2(20, 1);
+    const HELPER::pair day1(21, 2);
+    const HELPER::pair day2(25, 11);
 
     // current day
     const HELPER::pair today(day, month);
@@ -1030,32 +1030,11 @@ void loop() {
     rows.animate(container);
 
 
-    /*
-    if (animation_switch)
-    {
-        // animation 1
-        Serial.println("Animation 1");
-        RowAnimation rows(Color(random(0,MAX_COLOR),random(0,MAX_COLOR),random(0,MAX_COLOR)));
-        rows.animate(container);
-        animation_switch = false;
-    }
-
-    else 
-    {
-        // animation 2
-        Serial.println("Animation 2");
-        PulseRandom pulse(Color(random(0,MAX_COLOR),random(0,MAX_COLOR),random(0,MAX_COLOR)));
-        pulse.animate(container);
-        animation_switch = true;
-    }
-    */
-
     Serial.println("Waiting:");
     
     // calculate delay until next minute starts
     cTime.update();
-    unsigned long wait = 301 - cTime.second;
+    unsigned long wait = 301 - (cTime.second + (cTime.minute % 5) * 60);
     Serial.println(wait * 1000);
     delay(wait * 1000);
-    
 }
